@@ -1,0 +1,20 @@
+FROM osrf/ros:humble-desktop
+
+# Basic deps
+RUN apt-get update && apt-get install -y --no-install-recommends \    python3-pip python3-colcon-common-extensions \    ros-humble-gazebo-ros-pkgs ros-humble-nav2-bringup ros-humble-slam-toolbox \    && rm -rf /var/lib/apt/lists/*
+
+# Python deps (minimal)
+RUN pip3 install --no-cache-dir numpy matplotlib torch==2.2.0
+
+# Workspace
+WORKDIR /ws
+COPY . /ws
+
+# Build
+RUN . /opt/ros/humble/setup.sh && colcon build --symlink-install
+
+# Runtime setup
+ENV DISPLAY=:0
+ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+SHELL ["/bin/bash", "-c"]
+CMD source /opt/ros/humble/setup.bash && \    source /ws/install/setup.bash && \    ros2 launch nav_launch bringup.launch.py
